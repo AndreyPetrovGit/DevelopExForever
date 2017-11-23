@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>SignalR</title>
+    <link href="css/style.css" rel="stylesheet"/>
+</head>
+<body>
+    <div id="manageWrapper">
+        <div id="initForm">
+            <label class="label">URL:</label> <input type="text" id="url" placeholder="URL" />
+            <label class="label">Max thread count:</label> <input type="text" id="maxThreadCount" placeholder="threadMaxCount" />
+            <label class="label">Search text:</label><input type="text" id="searchText" placeholder="searchText" />
+            <label class="label">Max transition count:</label><input type="text" id="scanUrlCount" placeholder="scanUrlCount" />
+            <input type="button" id="startBtn" value="start" />
+            <input type="button" id="pauseBtn" value="pause" />
+            <input type="button" id="stopBtn" value="stop" />
+        </div>
+        <div class="statusWrapper">
+
+                <span class="stateGlobal">Scanned sites:</span>
+                <div id="progressbarGlobal">
+                    <div></div>
+                </div>
+        </div>
+    </div>
+
+    <div id="monitoringWrapper">
+        <div class="stateContainer Downloading" id="Downloading">
+            <div id="progressbar">
+                <div></div>
+            </div>
+        </div>
+        <div class="stateContainer Found" id="Found">
+
+        </div>
+        <div class="stateContainer NotFound" id="NotFound">
+
+        </div>
+        <div class="stateContainer Error" id="Error">
+
+        </div>
+    </div>
+
+    <script src="js/signalr-client-1.0.0-alpha2-final.min.js"></script>
+    <script src="js/script.js"></script>
+</body>
+</html>

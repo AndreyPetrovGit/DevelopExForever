@@ -1,0 +1,96 @@
+﻿*{
+  margin:0;
+  padding:0;
+}
+body {
+    background-color:black;
+    
+}
+.siteElement{
+    background-color:azure;
+    padding:10px;
+    margin: 10px;
+    word-break: break-all;
+}
+
+
+.stateContainer{
+    float:left;
+    width: 23%;
+    min-height: 500px;
+    background-color:white;
+    margin:1%;
+    position:relative;
+}
+#manageWrapper {
+    background-color:darkmagenta;
+    height:150px;
+}
+#initForm {
+ margin:0 auto;
+}
+#monitoringWrapper {
+    background-color: black;
+    width:100%;
+    min-height:500px;
+}
+
+
+
+.Downloading::before {
+    content: "Downloading";
+    color: white;
+    font-family: sans-serif;
+    font-size: 20px;
+    top: -40px;
+    position: absolute;
+    left: 60px;
+}
+
+.Found:before {
+    content: "Found";
+    color: white;
+    font-family: sans-serif;
+    font-size: 20px;
+    top: -40px;
+    position: absolute;
+    left: 60px;
+}
+
+.NotFound::before {
+    content: "NotFound";
+    color: white;
+    font-family: sans-serif;
+    font-size: 20px;
+    top: -40px;
+    position: absolute;
+    left: 60px;
+}
+.Error::before {
+    content: "Error";
+    color: white;
+    font-family: sans-serif;
+    font-size: 20px;
+    top: -40px;
+    position: absolute;
+    left: 60px;
+}
+.red{
+    color:red;
+}
+#progressbar, #progressbarGlobal {
+    background-color: black;
+    border-radius: 13px;
+    padding: 3px;
+}
+
+    #progressbar > div, #progressbarGlobal > div {
+        background-color: orange;
+        width: 0%;
+        height: 20px;
+        border-radius: 10px;
+    }
+.stateGlobal, .label {
+    color: white;
+    font-size: 18px;
+}

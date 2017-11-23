@@ -14,19 +14,17 @@ namespace DevelopExParser.Services
     {
         #region Fields
 
-        public WorkerStatus Status { get; set; }
+        WorkerStatus _status;
 
-        String BaseUrl { get; set; }
-        Int32 ThreadCount;
-        String SearchedText;
-        Int32 ScanUrlCount;
+        String _baseUrl;
+        Int32 _threadCount;
+        String _searchedText;
+        Int32 _scanUrlCount;
 
-        Queue<Site> ToParseQueue;
-        List<Site> HandledSites;
-
-        static CancellationTokenSource _cancellationTokenSource;
-
-        public Dictionary<String, Int32> AlreadyDetected { get; set; }
+        Queue<Site> _toParseQueue;
+        List<Site> _handledSites;
+        List<Site> _sitesToDownload;
+        Dictionary<String, Int32> _alreadyDetected;
 
         public event Action ResetState;
         public event Action<double> ProgressChanged;
@@ -35,12 +33,15 @@ namespace DevelopExParser.Services
         public event Action<int, string, string> MoveTo;
         public event Action<string, string, string> RenderSite;
         public event Action<double> ProgressGlobalChanged;
+
+        CancellationTokenSource _cancellationTokenSource;
+
         #endregion
 
         #region Methods
         public bool ParseTarget(String content)
         {
-            Regex targetPattern = new Regex($@"{SearchedText}");
+            Regex targetPattern = new Regex($@"{_searchedText}");
             if (targetPattern.IsMatch(content))
             {
                 return true;
@@ -66,26 +67,24 @@ namespace DevelopExParser.Services
 
         IEnumerable<Site> SitesToParse()
         {
-            while (0 < ToParseQueue.Count())
+            while (0 < _toParseQueue.Count())
             {
-                yield return ToParseQueue.Dequeue();
+                yield return _toParseQueue.Dequeue();
             }
         }
-
-        List<Site> SitesToDownload { get; set; }
 
         private void DownloadSites()
         {
             object locker = new object();
 
             _cancellationTokenSource = new CancellationTokenSource();
-            ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = ThreadCount, CancellationToken = _cancellationTokenSource.Token };
+            ParallelOptions parallelOptions = new ParallelOptions() { MaxDegreeOfParallelism = _threadCount, CancellationToken = _cancellationTokenSource.Token };
 
             int progress = 0;
-            int TotlalCount = SitesToDownload.Count();
+            int TotlalCount = _sitesToDownload.Count();
             try
             {
-                Parallel.ForEach(SitesToDownload,
+                Parallel.ForEach(_sitesToDownload,
                 parallelOptions,
                 () => new HttpClient(),
                 (currentSite, loopstate, index, httpClient) =>
@@ -93,12 +92,12 @@ namespace DevelopExParser.Services
                     try
                     {
                         currentSite.Status = SiteStatus.Downloading;
-                        RenderSite.Invoke(currentSite.Url, $"{AlreadyDetected[currentSite.Url]}", currentSite.Status.ToString());
+                        RenderSite.Invoke(currentSite.Url, $"{currentSite.Id}", currentSite.Status.ToString());
                         MessageEmitter.Invoke($"{Thread.CurrentThread.ManagedThreadId} start download {currentSite.Url}");
                         HttpResponseMessage response = httpClient.GetAsync(currentSite.Url).Result;
                         byte[] array = response.Content.ReadAsByteArrayAsync().Result;
                         currentSite.Content = System.Text.Encoding.UTF8.GetString(array);
-                        ToParseQueue.Enqueue(currentSite);
+                        _toParseQueue.Enqueue(currentSite);
                         MessageEmitter.Invoke($"{Thread.CurrentThread.ManagedThreadId} end download {currentSite.Url}");
                     }
 
@@ -108,8 +107,8 @@ namespace DevelopExParser.Services
                         MoveTo.Invoke(currentSite.Id, currentSite.Status.ToString(), ex.InnerException?.InnerException?.Message);
 
                         currentSite.ErrorText = ex.InnerException?.InnerException?.Message;
-                        HandledSites.Add(currentSite);
-                        ProgressGlobalChanged.Invoke((double)(HandledSites.Count * 100) / ScanUrlCount);
+                        _handledSites.Add(currentSite);
+                        ProgressGlobalChanged.Invoke((double)(_handledSites.Count * 100) / _scanUrlCount);
 
                     }
                     lock (locker)
@@ -132,23 +131,23 @@ namespace DevelopExParser.Services
             {
                 try
                 {
-                    if (AlreadyDetected.Count < ScanUrlCount)
+                    if (_alreadyDetected.Count < _scanUrlCount)
                     {
                         var links = ParseLinks(currentSite.Content);
                         links.ForEach(link =>
                         {
-                            if (!AlreadyDetected.ContainsKey(link) && AlreadyDetected.Count < ScanUrlCount)
+                            if (!_alreadyDetected.ContainsKey(link) && _alreadyDetected.Count < _scanUrlCount)
                             {
-                                SitesToDownload.Add(new Site(link) { Status = SiteStatus.Waiting, Id = AlreadyDetected.Count });
-                                AlreadyDetected.Add(link, AlreadyDetected.Count());
+                                _sitesToDownload.Add(new Site(link) { Status = SiteStatus.Waiting, Id = _alreadyDetected.Count });
+                                _alreadyDetected.Add(link, _alreadyDetected.Count());
                             }
 
                         });
                     }
 
                     currentSite.Status = ParseTarget(currentSite.Content) ? SiteStatus.Found : SiteStatus.NotFound;
-                    HandledSites.Add(currentSite);
-                    ProgressGlobalChanged.Invoke((double)(HandledSites.Count * 100) / ScanUrlCount);
+                    _handledSites.Add(currentSite);
+                    ProgressGlobalChanged.Invoke((double)(_handledSites.Count * 100) / _scanUrlCount);
 
                     MoveTo.Invoke(currentSite.Id, currentSite.Status.ToString(), null);
                     if (currentSite.Status == SiteStatus.Found)
@@ -167,31 +166,31 @@ namespace DevelopExParser.Services
         public void Run(Int32 scanUrlCount, Int32 threadCount, String searchedText, String baseUrl)
         {
 
-            if (Status == WorkerStatus.Stop)
+            if (_status == WorkerStatus.Stop)
             {
                 ResetState.Invoke();
-                BaseUrl = baseUrl;
-                SitesToDownload = new List<Site>();
-                ToParseQueue = new Queue<Site>();
-                AlreadyDetected = new Dictionary<String, Int32>();
-                AlreadyDetected.Add(baseUrl, AlreadyDetected.Count());
-                HandledSites = new List<Site>();
-                SitesToDownload.Add(new Site(baseUrl) { Status = SiteStatus.Downloading});
-                ThreadCount = threadCount;
-                SearchedText = searchedText;
-                ScanUrlCount = scanUrlCount;
+                _baseUrl = baseUrl;
+                _sitesToDownload = new List<Site>();
+                _toParseQueue = new Queue<Site>();
+                _alreadyDetected = new Dictionary<String, Int32>();
+                _alreadyDetected.Add(baseUrl, _alreadyDetected.Count());
+                _handledSites = new List<Site>();
+                _sitesToDownload.Add(new Site(baseUrl) { Status = SiteStatus.Downloading});
+                _threadCount = threadCount;
+                _searchedText = searchedText;
+                _scanUrlCount = scanUrlCount;
 
-                Status = WorkerStatus.Active;
+                _status = WorkerStatus.Active;
                 MessageEmitter.Invoke("Start Wrok!");
-                while (SitesToDownload.Count != 0 && Status != WorkerStatus.Stop)
+                while (_sitesToDownload.Count != 0 && _status != WorkerStatus.Stop)
                 {
                     downloadStep:
                     DownloadSites();
 
-                    SitesToDownload = SitesToDownload.Where(site => site.Status == SiteStatus.Waiting).ToList();
-                    if (Status == WorkerStatus.Pause)
+                    _sitesToDownload = _sitesToDownload.Where(site => site.Status == SiteStatus.Waiting).ToList();
+                    if (_status == WorkerStatus.Pause)
                     {
-                        while (Status == WorkerStatus.Pause)
+                        while (_status == WorkerStatus.Pause)
                         {
                             MessageEmitter.Invoke("Pause!");
                             Thread.Sleep(100);
@@ -203,28 +202,28 @@ namespace DevelopExParser.Services
                 }
                 string finalMessage;
 
-                if (Status == WorkerStatus.Stop)
+                if (_status == WorkerStatus.Stop)
                 {
                     finalMessage = "Process canceled!";
                 }
                 else
                 {
                     finalMessage = "Process completed successfully!";
-                    Status = WorkerStatus.Stop;
+                    _status = WorkerStatus.Stop;
                 }
 
                  WorkCompleted.Invoke(finalMessage);
             }
-            else if (Status == WorkerStatus.Pause)
+            else if (_status == WorkerStatus.Pause)
             {
-                Status = WorkerStatus.Active;
+                _status = WorkerStatus.Active;
             }
 
         }
 
         public void Stop()
         {
-            Status = WorkerStatus.Stop;
+            _status = WorkerStatus.Stop;
             if (_cancellationTokenSource != null)
             {
                 _cancellationTokenSource.Cancel();
@@ -233,7 +232,7 @@ namespace DevelopExParser.Services
 
         public void Pause()
         {
-            Status = WorkerStatus.Pause;
+            _status = WorkerStatus.Pause;
             if (_cancellationTokenSource != null)
             {
                 _cancellationTokenSource.Cancel();
@@ -243,7 +242,7 @@ namespace DevelopExParser.Services
 
         public SiteScanner()
         {
-            Status = WorkerStatus.Stop;
+            _status = WorkerStatus.Stop;
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls12;
         }
 

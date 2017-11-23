@@ -1,13 +1,9 @@
-﻿using DevelopExParser.Models;
-using System;
-using System.Threading.Tasks;
+﻿using System;
 
 namespace DevelopExParser.Services
 {
     public interface ISiteScanner
-    {
-        WorkerStatus Status { get; set; }
-        
+    {      
         event Action ResetState;
         event Action<double> ProgressChanged; 
         event Action<String> WorkCompleted;

@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using System;
+using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using DevelopExParser.Services;
 using DevelopExParser.Models;
-using System.Threading;
 
 namespace DevelopExParser.Hubs
 {
@@ -21,9 +21,17 @@ namespace DevelopExParser.Hubs
             _siteScanner.ProgressGlobalChanged += ProgressGlobalChanged;
         }
 
-        public async Task Start(string url, int maxThreadCount, string searchText, int scanUrlCount)
+        public async Task Start(String url, Int32 maxThreadCount, String searchText, Int32 scanUrlCount)
         {
-            await Task.Run(() =>_siteScanner.Run(scanUrlCount, maxThreadCount, searchText, url));
+            ScanerOptions options = new ScanerOptions
+            {
+                ScanUrlCount = scanUrlCount,
+                BaseUrl = url,
+                SearchedText = searchText,
+                ThreadCount = maxThreadCount
+            };
+
+            await Task.Run(() =>_siteScanner.Run(options));
         }
         public async Task Stop()
         {
@@ -34,9 +42,7 @@ namespace DevelopExParser.Hubs
             await Task.Run(() => { _siteScanner.Pause(); });
         }
 
-
-
-        private async void ConsoleLog(string message)
+        private async void ConsoleLog(String message)
         {
            await Clients.All.InvokeAsync("consoleLog", message);
         }
@@ -44,29 +50,28 @@ namespace DevelopExParser.Hubs
         {
             await Clients.All.InvokeAsync("resetState");
         }
-        private async void RenderSite(string url, string id, string status )
+        private async void RenderSite(String url, String id, String status )
         {
-            await Clients.All.InvokeAsync("renderSite", new string[] { id, url, status });
+            await Clients.All.InvokeAsync("renderSite", new String[] { id, url, status });
         }
-        private async void MoveTo(int id, string status, string error)
+        private async void MoveTo(Int32 id, String status, String error)
         {
-            string[] data = new string[] { $"{id}", status, ""};
+            String[] data = new String[] { $"{id}", status, ""};
             if (error != null && error != "")
             {
                 data[2] = error;
             }
             await Clients.All.InvokeAsync("moveTo", data);
         }
-
-        private async void ProgressChanged(double progress)
+        private async void ProgressChanged(Double progress)
         {
             await Clients.All.InvokeAsync("progressChanged", progress);
         }
-        private async void WorkCompleted(string message)
+        private async void WorkCompleted(String message)
         {
             await Clients.All.InvokeAsync("workCompleted", message);
         }
-        private async void ProgressGlobalChanged(double progress)
+        private async void ProgressGlobalChanged(Double progress)
         {
             await Clients.All.InvokeAsync("progressGlobalChanged", progress);
         }

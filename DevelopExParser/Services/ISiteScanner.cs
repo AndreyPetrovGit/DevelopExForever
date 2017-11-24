@@ -1,18 +1,19 @@
 ﻿using System;
+using DevelopExParser.Models;
 
 namespace DevelopExParser.Services
 {
     public interface ISiteScanner
     {      
         event Action ResetState;
-        event Action<double> ProgressChanged; 
+        event Action<Double> ProgressChanged; 
         event Action<String> WorkCompleted;
-        event Action<string> MessageEmitter;
-        event Action<int, string, string> MoveTo;
-        event Action<string, string, string> RenderSite;
-        event Action<double> ProgressGlobalChanged;
+        event Action<String> MessageEmitter;
+        event Action<Int32, String, String> MoveTo;
+        event Action<String, String, String> RenderSite;
+        event Action<Double> ProgressGlobalChanged;
 
-        void Run(int scanUrlCount, int maxThreadCount, string searchText, string url);
+        void Run(ScanerOptions options);
         void Stop();
         void Pause();
     }

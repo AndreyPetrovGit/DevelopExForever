@@ -2,19 +2,20 @@
   margin:0;
   padding:0;
 }
+
 body {
     background-color:black;
     
 }
-.siteElement{
+
+.siteElement {
     background-color:azure;
     padding:10px;
     margin: 10px;
     word-break: break-all;
 }
 
-
-.stateContainer{
+.stateContainer {
     float:left;
     width: 23%;
     min-height: 500px;
@@ -22,20 +23,21 @@ body {
     margin:1%;
     position:relative;
 }
+
 #manageWrapper {
     background-color:darkmagenta;
     height:150px;
 }
+
 #initForm {
  margin:0 auto;
 }
+
 #monitoringWrapper {
     background-color: black;
     width:100%;
     min-height:500px;
 }
-
-
 
 .Downloading::before {
     content: "Downloading";
@@ -66,6 +68,7 @@ body {
     position: absolute;
     left: 60px;
 }
+
 .Error::before {
     content: "Error";
     color: white;
@@ -75,21 +78,24 @@ body {
     position: absolute;
     left: 60px;
 }
-.red{
+
+.red {
     color:red;
 }
+
 #progressbar, #progressbarGlobal {
     background-color: black;
     border-radius: 13px;
     padding: 3px;
 }
 
-    #progressbar > div, #progressbarGlobal > div {
-        background-color: orange;
-        width: 0%;
-        height: 20px;
-        border-radius: 10px;
-    }
+#progressbar > div, #progressbarGlobal > div {
+    background-color: orange;
+    width: 0%;
+    height: 20px;
+    border-radius: 10px;
+}
+
 .stateGlobal, .label {
     color: white;
     font-size: 18px;

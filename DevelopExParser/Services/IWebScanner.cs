@@ -3,15 +3,15 @@ using DevelopExParser.Models;
 
 namespace DevelopExParser.Services
 {
-    public interface ISiteScanner
-    {      
+    public interface IWebScanner
+    {
         event Action ResetState;
-        event Action<Double> ProgressChanged; 
-        event Action<String> WorkCompleted;
-        event Action<String> MessageEmitter;
+        event Action<Int32, Int32> ProgressChanged;
+        event Action<WorkerStatus> WorkCompleted;
+        event Action<String> MessageEmitte;
         event Action<Int32, String, String> MoveTo;
         event Action<String, String, String> RenderSite;
-        event Action<Double> ProgressGlobalChanged;
+        event Action<Int32, Int32> ProgressGlobalChanged;
 
         void Run(ScanerOptions options);
         void Stop();

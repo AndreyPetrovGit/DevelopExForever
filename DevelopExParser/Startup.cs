@@ -12,7 +12,9 @@ namespace DevelopExParser
         {
             services.AddSignalR();
             services.AddSingleton<ManagerHub>();
-            services.AddSingleton<ISiteScanner, SiteScanner>();
+            services.AddSingleton<IWebScanner, WebScanner>();
+            services.AddTransient<IHtmlParser, HtmlParser>();
+            services.AddTransient<IHtmlDownloader, HtmlDownloader>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -29,7 +31,6 @@ namespace DevelopExParser
             {
                 routes.MapHub<ManagerHub>("Manager");
             });
-
         }
     }
 }
